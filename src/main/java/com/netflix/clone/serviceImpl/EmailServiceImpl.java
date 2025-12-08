@@ -62,7 +62,13 @@ public class EmailServiceImpl implements EmailService {
             String emailBody = "Hi,\n\n"
                     + resetLink
                     + "\n\n"
-                    + "This link will expire in 1 hour.\n\n";
+                    + "This link will expire in 1 hour.\n\n"
+                    + "If you didn't request a password reset, pleas ignore this email.\n\n"
+                    + "Best regards,\n"
+                    + "Netflix Clone Team";
+            message.setText(emailBody);
+            mailSender.send(message);
+            logger.info("Password reset email sent to {}", toEmail);
         } catch (Exception e) {
             logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send password reset email");
