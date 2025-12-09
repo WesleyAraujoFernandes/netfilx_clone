@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,7 +21,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +43,7 @@ public class User {
     private String fullName;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.USER;
+    private Role role;
     @Column(nullable = false)
     private boolean active = true;
     @Column(nullable = false)
@@ -75,5 +73,13 @@ public class User {
 
     public void removeFromWatchList(Video video) {
         this.watchList.remove(video);
+    }
+
+    public Role getRole() {
+        return this.role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

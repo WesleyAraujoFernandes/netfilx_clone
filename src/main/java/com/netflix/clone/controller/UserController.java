@@ -1,0 +1,33 @@
+package com.netflix.clone.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.netflix.clone.dto.request.UserRequest;
+import com.netflix.clone.dto.response.MessageResponse;
+import com.netflix.clone.service.UserService;
+
+@RestController
+@RequestMapping("/api/users")
+@PreAuthorize("hasRole('ADMIN')")
+public class UserController {
+    @Autowired
+    private UserService userService;
+
+    @PostMapping
+    public ResponseEntity<MessageResponse> createUser(@RequestBody UserRequest userRequest) {
+        return ResponseEntity.ok(userService.createUser(userRequest));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<MessageResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
+        return ResponseEntity.ok(userService.updateUser(id, userRequest));
+    }
+}
