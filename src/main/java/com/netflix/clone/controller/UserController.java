@@ -50,4 +50,11 @@ public class UserController {
         String currentUserEmail = authentication.getName();
         return ResponseEntity.ok(userService.deleteUser(id, currentUserEmail));
     }
+
+    @PutMapping("/{id}/toggle-status")
+    public ResponseEntity<MessageResponse> toggleUserStatus(
+            @PathVariable Long id, Authentication authentication) {
+        String currentUserEmail = authentication.getName();
+        return ResponseEntity.ok(userService.toggleUserStatus(id, currentUserEmail));
+    }
 }
