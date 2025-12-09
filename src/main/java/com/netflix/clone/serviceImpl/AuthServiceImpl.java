@@ -9,9 +9,12 @@ import org.springframework.stereotype.Service;
 
 import com.netflix.clone.dao.UserRepository;
 import com.netflix.clone.dto.request.UserRequest;
+import com.netflix.clone.dto.response.EmailValidationResponse;
+import com.netflix.clone.dto.response.LoginResponse;
 import com.netflix.clone.dto.response.MessageResponse;
 import com.netflix.clone.entity.User;
 import com.netflix.clone.enums.Role;
+import com.netflix.clone.exception.AccountDeactivatedException;
 import com.netflix.clone.exception.EmailAlreadyExistsException;
 import com.netflix.clone.security.JwtUtil;
 import com.netflix.clone.service.AuthService;
@@ -58,4 +61,40 @@ public class AuthServiceImpl implements AuthService {
         return new MessageResponse("Registration successful! Please check your email to verify your account");
     }
 
+    @Override
+    public LoginResponse login(String email, String password) {
+        User user = userRepository
+                .findByEmail(email)
+                .filter(u -> passwordEncoder.matches(password, u.getPassword()))
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+        if (!user.isActive()) {
+            throw new AccountDeactivatedException("Account is inactive. Please contact support.");
+        }
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Email not verified. Please verify your email before logging in.");
+        }
+        final String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        // System.out.println("Generated JWT Token: " + token);
+        return new LoginResponse(token, user.getEmail(), user.getFullName(), user.getRole().name());
+    }
+
+    @Override
+    public EmailValidationResponse validateEmail(String email) {
+        boolean exists = userRepository.existsByEmail(email);
+        return new EmailValidationResponse(exists, !exists);
+    }
+
+    @Override
+    public MessageResponse verifyEmail(String token) {
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired verification token."));
+        if (user.getVerificationTokenExpiry().isBefore(Instant.now())) {
+            throw new RuntimeException("Verification link has expired. Please request a new one.");
+        }
+        user.setEmailVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+        userRepository.save(user);
+        return new MessageResponse("Email verified successfully! You can now log in to your account.");
+    }
 }
