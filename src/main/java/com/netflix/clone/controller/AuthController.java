@@ -37,13 +37,11 @@ public class AuthController {
 
     @GetMapping("/validate-email")
     public ResponseEntity<EmailValidationResponse> validateEmail(@RequestParam String email) {
-        System.out.println("Validating email: " + email);
         return ResponseEntity.ok(authService.validateEmail(email));
     }
 
     @GetMapping("/verify-email")
     public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
-        // Implementation for email verification
         return ResponseEntity.ok(authService.verifyEmail(token));
     }
 }

@@ -36,15 +36,15 @@ public class EmailServiceImpl implements EmailService {
             String emailBody = "Welcome to Netflix Clone!\n\n"
                     + "Thank you for registering. Please verify your email address by clicking the link below:\n\n"
                     + verificationLink
-                    + "This link will expire in 24 hours.\n\n"
+                    + " This link will expire in 24 hours.\n\n"
                     + "If you didn't create this account, please ignore this email."
                     + "Best regards,\n"
                     + "Netflix Clone Team";
             message.setText(emailBody);
             mailSender.send(message);
-            logger.info("Verification email sent to {}", toEmail);
+            logger.info("Verification email sent to {} ", toEmail);
         } catch (Exception ex) {
-            logger.error("Failed to send verification email to {}: {}", toEmail, ex.getMessage(), ex);
+            logger.error("Failed to send verification email to {}: {} ", toEmail, ex.getMessage(), ex);
             throw new EmailNotVerifiedException("Failed to send verification email");
         }
     }
