@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,8 @@ import com.netflix.clone.service.EmailService;
 import com.netflix.clone.service.UserService;
 import com.netflix.clone.util.PaginationUtils;
 import com.netflix.clone.util.ServiceUtils;
+
+import jakarta.annotation.Nonnull;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -100,6 +103,26 @@ public class UserServiceImpl implements UserService {
             userPage = userRepository.findAll(pageable);
         }
         return PaginationUtils.toPageResponse(userPage, UserResponse::fromEntity);
+    }
+
+    @Override
+    public MessageResponse deleteUser(@NonNull Long id, String currentUserEmail) {
+        User user = serviceUtils.getUserByIdOrThrow(id);
+        if (user.getEmail().equals(currentUserEmail)) {
+            throw new RuntimeException("You cannot delete your own account");
+        }
+        ensureNotLastAdmin(user, "delete");
+        userRepository.deleteById(id);
+        return new MessageResponse("User deleted successfully");
+    }
+
+    private void ensureNotLastAdmin(User user, String operation) {
+        if (user.getRole() == Role.ADMIN) {
+            long adminCount = userRepository.countByRole(Role.ADMIN);
+            if (adminCount <= 1) {
+                throw new RuntimeException("Cannot " + operation + " the last admin user");
+            }
+        }
     }
 
 }
