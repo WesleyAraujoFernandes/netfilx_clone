@@ -140,4 +140,19 @@ public class UserServiceImpl implements UserService {
         return new MessageResponse("User status updated successfully");
     }
 
+    @Override
+    public MessageResponse changeUserRole(Long id, UserRequest userRequest) {
+        User user = serviceUtils.getUserByIdOrThrow(id);
+        validateRole(userRequest.getRole());
+
+        Role newRole = Role.valueOf(userRequest.getRole().name().toUpperCase());
+        if (user.getRole() == Role.ADMIN && newRole == Role.USER) {
+            ensureNotLastAdmin(user, "change the role of");
+        }
+
+        user.setRole(newRole);
+        userRepository.save(user);
+        return new MessageResponse("User role updated successfully");
+    }
+
 }
