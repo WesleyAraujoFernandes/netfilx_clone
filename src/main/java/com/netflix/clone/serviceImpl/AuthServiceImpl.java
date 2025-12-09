@@ -1,5 +1,8 @@
 package com.netflix.clone.serviceImpl;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,7 +49,12 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(userRequest.getFullName());
         user.setRole(Role.USER);
         user.setActive(true);
-        user
+        user.setEmailVerified(false);
+        String verificationToken = UUID.randomUUID().toString();
+        user.setVerificationToken(verificationToken);
+        user.setVerificationTokenExpiry(Instant.now().plusSeconds(24 * 60 * 60)); // 24 hours expiry
+        userRepository.save(user);
+        emailService.sendVerificationEmail(userRequest.getEmail(), verificationToken);
         return new MessageResponse("Registration successful! Please check your email to verify your account");
     }
 
