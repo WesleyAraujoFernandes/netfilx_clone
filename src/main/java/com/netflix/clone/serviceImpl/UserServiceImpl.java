@@ -5,18 +5,23 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.netflix.clone.dao.UserRepository;
 import com.netflix.clone.dto.request.UserRequest;
 import com.netflix.clone.dto.response.MessageResponse;
+import com.netflix.clone.dto.response.PageResponse;
+import com.netflix.clone.dto.response.UserResponse;
 import com.netflix.clone.entity.User;
 import com.netflix.clone.enums.Role;
 import com.netflix.clone.exception.EmailAlreadyExistsException;
 import com.netflix.clone.exception.InvalidRoleException;
 import com.netflix.clone.service.EmailService;
 import com.netflix.clone.service.UserService;
+import com.netflix.clone.util.PaginationUtils;
 import com.netflix.clone.util.ServiceUtils;
 
 @Service
@@ -83,6 +88,18 @@ public class UserServiceImpl implements UserService {
                 throw new RuntimeException("Cannot deactivate the last active admin user");
             }
         }
+    }
+
+    @Override
+    public PageResponse<UserResponse> getUsers(int page, int size, String search) {
+        Pageable pageable = PaginationUtils.createPageRequest(page, size, "id");
+        Page<User> userPage;
+        if (search != null && !search.trim().isEmpty()) {
+            userPage = userRepository.searchUsers(search.trim(), pageable);
+        } else {
+            userPage = userRepository.findAll(pageable);
+        }
+        return PaginationUtils.toPageResponse(userPage, UserResponse::fromEntity);
     }
 
 }
