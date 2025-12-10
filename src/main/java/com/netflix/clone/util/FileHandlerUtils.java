@@ -90,30 +90,6 @@ public class FileHandlerUtils {
         }
     }
 
-    public static String detectImageContentType(String filename) {
-        if (filename == null) {
-            return "image/jpeg"; // Default content type
-        }
-
-        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (filename.endsWith(".png")) {
-            return "image/png";
-        } else if (filename.endsWith(".gif")) {
-            return "image/gif";
-        } else if (filename.endsWith(".bmp")) {
-            return "image/bmp";
-        } else if (filename.endsWith(".webp")) {
-            return "image/webp";
-        } else if (filename.endsWith(".tiff") || filename.endsWith(".tif")) {
-            return "image/tiff";
-        } else if (filename.endsWith(".svg")) {
-            return "image/svg+xml";
-        } else {
-            return "image/jpeg"; // Default content type
-        }
-    }
-
     public static long[] parseRangeHeader(String rangeHeader, long fileLength) {
         if (rangeHeader == null || !rangeHeader.startsWith("bytes=")) {
             return new long[] { 0, fileLength - 1 };
