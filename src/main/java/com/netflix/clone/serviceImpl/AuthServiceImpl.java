@@ -16,6 +16,7 @@ import com.netflix.clone.entity.User;
 import com.netflix.clone.enums.Role;
 import com.netflix.clone.exception.AccountDeactivatedException;
 import com.netflix.clone.exception.EmailAlreadyExistsException;
+import com.netflix.clone.exception.InvalidCredentialsException;
 import com.netflix.clone.exception.InvalidTokenException;
 import com.netflix.clone.security.JwtUtil;
 import com.netflix.clone.service.AuthService;
@@ -133,5 +134,16 @@ public class AuthServiceImpl implements AuthService {
         user.setPasswordResetTokenExpiry(null);
         userRepository.save(user);
         return new MessageResponse("Password has been reset successfully! You can now log in with your new password.");
+    }
+
+    @Override
+    public MessageResponse changePassword(String email, String currentPassword, String newPassword) {
+        User user = serviceUtils.getUserByEmailOrThrow(email);
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new InvalidCredentialsException("Current password is incorrect.");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return new MessageResponse("Password changed successfully.");
     }
 }
