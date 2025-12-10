@@ -16,6 +16,7 @@ import com.netflix.clone.entity.User;
 import com.netflix.clone.enums.Role;
 import com.netflix.clone.exception.AccountDeactivatedException;
 import com.netflix.clone.exception.EmailAlreadyExistsException;
+import com.netflix.clone.exception.InvalidTokenException;
 import com.netflix.clone.security.JwtUtil;
 import com.netflix.clone.service.AuthService;
 import com.netflix.clone.service.EmailService;
@@ -96,5 +97,41 @@ public class AuthServiceImpl implements AuthService {
         user.setVerificationTokenExpiry(null);
         userRepository.save(user);
         return new MessageResponse("Email verified successfully! You can now log in to your account.");
+    }
+
+    @Override
+    public MessageResponse resendVerification(String email) {
+        User user = serviceUtils.getUserByEmailOrThrow(email);
+        String verficationToken = UUID.randomUUID().toString();
+        user.setVerificationToken(verficationToken);
+        user.setVerificationTokenExpiry(Instant.now().plusSeconds(24 * 60 * 60)); // 24 hours expiry
+        userRepository.save(user);
+        emailService.sendVerificationEmail(email, verficationToken);
+        return new MessageResponse("Verification email resent! Please check your email.");
+    }
+
+    @Override
+    public MessageResponse forgotPassword(String email) {
+        User user = serviceUtils.getUserByEmailOrThrow(email);
+        String resetToken = UUID.randomUUID().toString();
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiry(Instant.now().plusSeconds(1 * 60 * 60)); // 1 hour expiry
+        userRepository.save(user);
+        emailService.sendPasswordResetEmail(email, resetToken);
+        return new MessageResponse("Password reset email sent! Please check your email.");
+    }
+
+    @Override
+    public MessageResponse resetPassword(String token, String newPassword) {
+        User user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired password reset token."));
+        if (user.getPasswordResetTokenExpiry() == null || user.getPasswordResetTokenExpiry().isBefore(Instant.now())) {
+            throw new InvalidTokenException("Password reset token has expired. Please request a new one.");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
+        userRepository.save(user);
+        return new MessageResponse("Password has been reset successfully! You can now log in with your new password.");
     }
 }

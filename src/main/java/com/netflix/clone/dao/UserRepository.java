@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByVerificationToken(String token);
 
+    Optional<User> findByPasswordResetToken(String token);
+
     long countByRoleAndActive(Role role, boolean active);
 
     @Query("SELECT u FROM User u WHERE "

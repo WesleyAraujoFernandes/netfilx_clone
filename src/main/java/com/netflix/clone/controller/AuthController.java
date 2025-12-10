@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.netflix.clone.dto.request.EmailRequest;
 import com.netflix.clone.dto.request.LoginRequest;
+import com.netflix.clone.dto.request.ResetPasswordRequest;
 import com.netflix.clone.dto.request.UserRequest;
 import com.netflix.clone.dto.response.EmailValidationResponse;
 import com.netflix.clone.dto.response.LoginResponse;
@@ -43,5 +45,22 @@ public class AuthController {
     @GetMapping("/verify-email")
     public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
         return ResponseEntity.ok(authService.verifyEmail(token));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<MessageResponse> resendVerification(@Valid @RequestBody EmailRequest emailRequest) {
+        return ResponseEntity.ok(authService.resendVerification(emailRequest.getEmail()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody EmailRequest emailRequest) {
+        return ResponseEntity.ok(authService.forgotPassword(emailRequest.getEmail()));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        return ResponseEntity
+                .ok(authService.resetPassword(resetPasswordRequest.getToken(), resetPasswordRequest.getNewPassword()));
     }
 }
