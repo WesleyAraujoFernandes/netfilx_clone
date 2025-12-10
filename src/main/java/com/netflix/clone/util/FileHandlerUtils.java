@@ -65,4 +65,80 @@ public class FileHandlerUtils {
             return "video/mp4"; // Default content type
         }
     }
+
+    public static String detectImageContentType(String filename) {
+        if (filename == null) {
+            return "image/jpeg"; // Default content type
+        }
+
+        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (filename.endsWith(".png")) {
+            return "image/png";
+        } else if (filename.endsWith(".gif")) {
+            return "image/gif";
+        } else if (filename.endsWith(".bmp")) {
+            return "image/bmp";
+        } else if (filename.endsWith(".webp")) {
+            return "image/webp";
+        } else if (filename.endsWith(".tiff") || filename.endsWith(".tif")) {
+            return "image/tiff";
+        } else if (filename.endsWith(".svg")) {
+            return "image/svg+xml";
+        } else {
+            return "image/jpeg"; // Default content type
+        }
+    }
+
+    public static String detectImageContentType(String filename) {
+        if (filename == null) {
+            return "image/jpeg"; // Default content type
+        }
+
+        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (filename.endsWith(".png")) {
+            return "image/png";
+        } else if (filename.endsWith(".gif")) {
+            return "image/gif";
+        } else if (filename.endsWith(".bmp")) {
+            return "image/bmp";
+        } else if (filename.endsWith(".webp")) {
+            return "image/webp";
+        } else if (filename.endsWith(".tiff") || filename.endsWith(".tif")) {
+            return "image/tiff";
+        } else if (filename.endsWith(".svg")) {
+            return "image/svg+xml";
+        } else {
+            return "image/jpeg"; // Default content type
+        }
+    }
+
+    public static long[] parseRangeHeader(String rangeHeader, long fileLength) {
+        if (rangeHeader == null || !rangeHeader.startsWith("bytes=")) {
+            return new long[] { 0, fileLength - 1 };
+        }
+
+        String rangeValue = rangeHeader.substring(6);
+        String[] parts = rangeValue.split("-");
+        long start = 0;
+        long end = fileLength - 1;
+
+        try {
+            if (!parts[0].isEmpty()) {
+                start = Long.parseLong(parts[0]);
+            }
+            if (parts.length > 1 && !parts[1].isEmpty()) {
+                end = Long.parseLong(parts[1]);
+            }
+        } catch (NumberFormatException e) {
+            return new long[] { 0, fileLength - 1 };
+        }
+
+        if (start > end || end >= fileLength) {
+            return new long[] { 0, fileLength - 1 };
+        }
+
+        return new long[] { start, end };
+    }
 }
