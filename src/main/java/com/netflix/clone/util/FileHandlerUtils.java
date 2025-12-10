@@ -1,7 +1,15 @@
 package com.netflix.clone.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import org.springframework.core.io.InputStreamResource;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 public class FileHandlerUtils {
     private FileHandlerUtils() {
@@ -91,30 +99,93 @@ public class FileHandlerUtils {
     }
 
     public static long[] parseRangeHeader(String rangeHeader, long fileLength) {
-        if (rangeHeader == null || !rangeHeader.startsWith("bytes=")) {
-            return new long[] { 0, fileLength - 1 };
-        }
-
-        String rangeValue = rangeHeader.substring(6);
-        String[] parts = rangeValue.split("-");
-        long start = 0;
-        long end = fileLength - 1;
-
-        try {
-            if (!parts[0].isEmpty()) {
-                start = Long.parseLong(parts[0]);
-            }
-            if (parts.length > 1 && !parts[1].isEmpty()) {
-                end = Long.parseLong(parts[1]);
-            }
-        } catch (NumberFormatException e) {
-            return new long[] { 0, fileLength - 1 };
-        }
-
-        if (start > end || end >= fileLength) {
-            return new long[] { 0, fileLength - 1 };
-        }
-
-        return new long[] { start, end };
+        String[] ranges = rangeHeader.replace("bytes=", "").split("-");
+        long rangeStart = Long.parseLong(ranges[0]);
+        long rangeEnd = ranges.length > 1 && !ranges[1].isEmpty() ? Long.parseLong(ranges[1]) : fileLength - 1;
+        return new long[] { rangeStart, rangeEnd };
     }
+
+    public static Resource createRangeResource(Path filePath, long rangeStart, long rangeLength) throws IOException {
+        RandomAccessFile fileReader = new RandomAccessFile(filePath.toFile(), "r");
+        fileReader.seek(rangeStart);
+        InputStream partialContentStream = new InputStream() {
+            private long totalBytesRead = 0;
+
+            @Override
+            public int read() throws IOException {
+                if (totalBytesRead >= rangeLength) {
+                    fileReader.close();
+                    return -1;
+                }
+                totalBytesRead++;
+                return fileReader.read();
+            }
+
+            @Override
+            public int read(byte[] buffer, int offset, int length) throws IOException {
+                if (totalBytesRead >= rangeLength) {
+                    fileReader.close();
+                    return -1;
+                }
+                long remainingBytes = rangeLength - totalBytesRead;
+                int bytesToRead = (int) Math.min(length, remainingBytes);
+                int bytesActuallyRead = fileReader.read(buffer, offset, bytesToRead);
+                if (bytesActuallyRead > 0) {
+                    totalBytesRead += bytesActuallyRead;
+                }
+                if (totalBytesRead >= rangeLength) {
+                    fileReader.close();
+                }
+                return bytesActuallyRead;
+            }
+
+            @Override
+            public void close() throws IOException {
+                fileReader.close();
+            }
+        };
+        return new InputStreamResource(partialContentStream) {
+            @Override
+            public long contentLength() {
+                return rangeLength;
+            }
+        };
+    }
+
+    public static Resource createFullResource(Path filePath) throws IOException {
+        Resource resource = new UrlResource(filePath.toUri());
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new IOException("File not found or not readable: " + filePath);
+        }
+        return resource;
+    }
+    /*
+     * public static long[] parseRangeHeader(String rangeHeader, long fileLength) {
+     * if (rangeHeader == null || !rangeHeader.startsWith("bytes=")) {
+     * return new long[] { 0, fileLength - 1 };
+     * }
+     * 
+     * String rangeValue = rangeHeader.substring(6);
+     * String[] parts = rangeValue.split("-");
+     * long start = 0;
+     * long end = fileLength - 1;
+     * 
+     * try {
+     * if (!parts[0].isEmpty()) {
+     * start = Long.parseLong(parts[0]);
+     * }
+     * if (parts.length > 1 && !parts[1].isEmpty()) {
+     * end = Long.parseLong(parts[1]);
+     * }
+     * } catch (NumberFormatException e) {
+     * return new long[] { 0, fileLength - 1 };
+     * }
+     * 
+     * if (start > end || end >= fileLength) {
+     * return new long[] { 0, fileLength - 1 };
+     * }
+     * 
+     * return new long[] { start, end };
+     * }
+     */
 }
