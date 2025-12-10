@@ -7,6 +7,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,7 +56,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     private String storeFile(MultipartFile file, Path storageLocation) {
         String fileExtension = FileHandlerUtils.extractFileExtension(file.getOriginalFilename());
         String uuid = UUID.randomUUID().toString();
-        String filename = uuid + fileExtension;
+        String filename = uuid + "." + fileExtension;
 
         try {
             if (file.isEmpty()) {
@@ -66,4 +70,33 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
     }
 
+    @Override
+    public ResponseEntity<Resource> serveVideo(String uuid, String rangeHeader) {
+        try {
+            Path filePath = FileHandlerUtils.findFileByUUID(videoStorageLocation, uuid);
+            Resource resource = FileHandlerUtils.createFullResource(filePath);
+            String filename = resource.getFilename();
+            String contentType = FileHandlerUtils.detectVideoContentType(filename);
+            long fileLength = resource.contentLength();
+            if (isFullContentRequest(rangeHeader)) {
+                return buildFullVideoResponse(resource, contentType, filename, fileLength);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private ResponseEntity<Resource> buildFullVideoResponse(Resource resource, String contentType, String filename,
+            long fileLength) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename\"" + filename + "\"")
+                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileLength))
+                .body(resource);
+    }
+
+    private boolean isFullContentRequest(String rangeHeader) {
+        return rangeHeader == null || rangeHeader.isEmpty();
+    }
 }
