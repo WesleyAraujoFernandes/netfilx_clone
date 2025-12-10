@@ -19,9 +19,15 @@ public class FileUploadController {
     @Autowired
     private FileUploadService fileUploadService;
 
-    @PostMapping("/update/video")
+    @PostMapping("/upload/video")
     public ResponseEntity<Map<String, String>> uploadVideo(@RequestParam("file") MultipartFile file) {
         String uuid = fileUploadService.storeVideoFile(file);
+        return ResponseEntity.ok(buildUploadResponse(uuid, file));
+    }
+
+    @PostMapping("/upload/image")
+    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
+        String uuid = fileUploadService.storeImageFile(file);
         return ResponseEntity.ok(buildUploadResponse(uuid, file));
     }
 

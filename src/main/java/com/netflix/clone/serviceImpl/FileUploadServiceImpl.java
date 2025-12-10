@@ -44,6 +44,11 @@ public class FileUploadServiceImpl implements FileUploadService {
         return storeFile(file, videoStorageLocation);
     }
 
+    @Override
+    public String storeImageFile(MultipartFile file) {
+        return storeFile(file, imageStorageLocation);
+    }
+
     private String storeFile(MultipartFile file, Path storageLocation) {
         String fileExtension = FileHandlerUtils.extractFileExtension(file.getOriginalFilename());
         String uuid = UUID.randomUUID().toString();
