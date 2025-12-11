@@ -1,5 +1,6 @@
 package com.netflix.clone.serviceImpl;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,9 +82,40 @@ public class FileUploadServiceImpl implements FileUploadService {
             if (isFullContentRequest(rangeHeader)) {
                 return buildFullVideoResponse(resource, contentType, filename, fileLength);
             }
+            return buildPartialVideoResponse(filePath, rangeHeader, contentType, filename, fileLength);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private ResponseEntity<Resource> buildPartialVideoResponse(Path filePath, String rangeHeader, String contentType,
+            String filename, long fileLength) throws IOException {
+        long[] range = FileHandlerUtils.parseRangeHeader(rangeHeader, fileLength);
+        long rangeStart = range[0];
+        long rangeEnd = range[1];
+        if (!isValidRange(rangeStart, rangeEnd, fileLength)) {
+            return buildRangeNotSatisfiableResponse(fileLength);
+        }
+        long contentLength = rangeEnd - rangeStart + 1;
+        Resource rangeReasource = FileHandlerUtils.createRangeResource(filePath, rangeStart, rangeEnd);
+        return ResponseEntity.status(206)
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
+                .header(HttpHeaders.CONTENT_RANGE,
+                        "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength)
+                .body(rangeReasource);
+    }
+
+    private ResponseEntity<Resource> buildRangeNotSatisfiableResponse(long fileLength) {
+        return ResponseEntity.status(416)
+                .header(HttpHeaders.CONTENT_RANGE, "bytes */" + fileLength)
+                .build();
+    }
+
+    private boolean isValidRange(long rangeStart, long rangeEnd, long fileLength) {
+        return rangeStart <= rangeEnd && rangeStart >= 0 && rangeEnd < fileLength;
     }
 
     private ResponseEntity<Resource> buildFullVideoResponse(Resource resource, String contentType, String filename,
