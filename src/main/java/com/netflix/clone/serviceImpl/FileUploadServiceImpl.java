@@ -19,6 +19,7 @@ import com.netflix.clone.service.FileUploadService;
 import com.netflix.clone.util.FileHandlerUtils;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotNull;
 
 @Service
 public class FileUploadServiceImpl implements FileUploadService {
@@ -130,5 +131,21 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     private boolean isFullContentRequest(String rangeHeader) {
         return rangeHeader == null || rangeHeader.isEmpty();
+    }
+
+    @Override
+    public ResponseEntity<Resource> serveImage(String uuid) {
+        try {
+            Path filePath = FileHandlerUtils.findFileByUUID(imageStorageLocation, uuid);
+            Resource resource = FileHandlerUtils.createFullResource(filePath);
+            String filename = resource.getFilename();
+            String contentType = FileHandlerUtils.detectImageContentType(filename);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
