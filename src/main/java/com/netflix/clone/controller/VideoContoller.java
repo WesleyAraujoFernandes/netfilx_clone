@@ -1,5 +1,7 @@
 package com.netflix.clone.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -79,6 +81,12 @@ public class VideoContoller {
             Authentication authentication) {
         String email = authentication != null ? authentication.getName() : null;
         PageResponse<VideoResponse> response = videoService.getPublishedVideos(page, size, search, email);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/featured")
+    public ResponseEntity<List<VideoResponse>> getFeaturedVideos() {
+        List<VideoResponse> response = videoService.getFeaturedVideos();
         return ResponseEntity.ok(response);
     }
 }
