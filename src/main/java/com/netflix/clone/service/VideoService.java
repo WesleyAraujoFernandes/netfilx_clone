@@ -4,6 +4,7 @@ import com.netflix.clone.dto.request.VideoRequest;
 import com.netflix.clone.dto.response.MessageResponse;
 import com.netflix.clone.dto.response.PageResponse;
 import com.netflix.clone.dto.response.VideoResponse;
+import com.netflix.clone.dto.response.VideoStatsResponse;
 
 public interface VideoService {
 
@@ -16,5 +17,7 @@ public interface VideoService {
     MessageResponse deleteVideoByAdmin(Long id);
 
     MessageResponse toggleVideoPublishStatusByAdmin(Long id, boolean status);
+
+    VideoStatsResponse getAdminStats();
 
 }

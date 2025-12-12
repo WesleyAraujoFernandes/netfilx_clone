@@ -1,6 +1,7 @@
 package com.netflix.clone.serviceImpl;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,10 +14,13 @@ import com.netflix.clone.dto.request.VideoRequest;
 import com.netflix.clone.dto.response.MessageResponse;
 import com.netflix.clone.dto.response.PageResponse;
 import com.netflix.clone.dto.response.VideoResponse;
+import com.netflix.clone.dto.response.VideoStatsResponse;
 import com.netflix.clone.entity.Video;
 import com.netflix.clone.service.VideoService;
 import com.netflix.clone.util.PaginationUtils;
 import com.netflix.clone.util.ServiceUtils;
+
+import jakarta.persistence.metamodel.SetAttribute;
 
 @Service
 public class VideoServiceImpl implements VideoService {
@@ -89,5 +93,40 @@ public class VideoServiceImpl implements VideoService {
         video.setPublished(status);
         videoRepository.save(video);
         return new MessageResponse("Videos publis status update successfully");
+    }
+
+    @Override
+    public VideoStatsResponse getAdminStats() {
+        long totalVideos = videoRepository.count();
+        long publishedVideos = videoRepository.countPublishedVideos();
+        long totalDuration = videoRepository.getTotalDuration();
+        return new VideoStatsResponse(totalVideos, publishedVideos, totalDuration);
+    }
+
+    @Override
+    public PageResponse<VideoResponse> getPublishedVideos(int page, int size, String search, String email) {
+        Pageable pageable = PaginationUtils.createPageRequest(page, size, "id");
+        Page<Video> videoPage;
+        if (search != null && !search.trim().isEmpty()) {
+            videoPage = videoRepository.searchPublishedVideos(search.trim(), pageable);
+        } else {
+            videoPage = videoRepository.findPublishedVideos(pageable);
+        }
+        List<Video> videos = videoPage.getContent();
+        Set<Long> watchListIds = Set.of();
+        if (!videos.isEmpty()) {
+            try {
+                List<Long> videoIds = videos.stream().map(Video::getId).toList();
+                watchListIds = userRepository.findWatchListVideoIds(email, videoIds);
+            } catch (Exception e) {
+                watchListIds = Set.of();
+            }
+        }
+        Set<Long> finalWatchListIds = watchListIds;
+        videos.forEach(video -> video.setIsInWatchList(finalWatchListIds.contains(video.getId())));
+        List<VideoResponse> videoResponses = videos.stream()
+                .map(VideoResponse::fromEntity)
+                .toList();
+        return PaginationUtils.toPageResponse(videoPage, videoResponses);
     }
 }
