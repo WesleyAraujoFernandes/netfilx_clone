@@ -90,7 +90,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public MessageResponse toggleVideoPublishStatusByAdmin(Long id, boolean status) {
-        Video video = serviceUtils.getVideoByIdORThrow(id);
+        Video video = serviceUtils.getVideoByIdOrThrow(id);
         video.setPublished(status);
         videoRepository.save(video);
         return new MessageResponse("Videos publis status update successfully");

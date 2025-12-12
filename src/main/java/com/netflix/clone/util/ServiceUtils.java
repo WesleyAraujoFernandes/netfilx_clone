@@ -26,7 +26,7 @@ public class ServiceUtils {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id:" + id));
     }
 
-    public Video getVideoByIdORThrow(Long id) {
+    public Video getVideoByIdOrThrow(Long id) {
         return videoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Video not found with id:" + id));
     }
