@@ -31,4 +31,13 @@ public class WatchlistServiceImpl implements WatchlistService {
         return new MessageResponse("Video added to watchlist successfully");
     }
 
+    @Override
+    public MessageResponse removeFromWatchlist(String email, Long videoId) {
+        User user = serviceUtils.getUserByEmailOrThrow(email);
+        Video video = serviceUtils.getVideoByIdOrThrow(videoId);
+        user.removeFromWatchList(video);
+        userRepository.save(user);
+        return new MessageResponse("Video removed from watchlist successfully");
+    }
+
 }

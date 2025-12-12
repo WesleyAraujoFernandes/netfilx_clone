@@ -6,4 +6,6 @@ public interface WatchlistService {
 
     MessageResponse addToWatchlist(String email, Long videoId);
 
+    MessageResponse removeFromWatchlist(String email, Long videoId);
+
 }

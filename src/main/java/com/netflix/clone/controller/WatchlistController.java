@@ -3,6 +3,7 @@ package com.netflix.clone.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,13 @@ public class WatchlistController {
     @PostMapping("/{videoId}")
     public ResponseEntity<MessageResponse> addToWatchlist(@PathVariable Long videoId, Authentication authentication) {
         String email = authentication.getName();
-        return ResponseEntity.ok(new MessageResponse(watchlistService.addToWatchlist(email, videoId)));
+        return ResponseEntity.ok(watchlistService.addToWatchlist(email, videoId));
+    }
+
+    @DeleteMapping("/{videoId}")
+    public ResponseEntity<MessageResponse> removeFromWatchlist(
+            @PathVariable Long videoId, Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(watchlistService.removeFromWatchlist(email, videoId));
     }
 }
