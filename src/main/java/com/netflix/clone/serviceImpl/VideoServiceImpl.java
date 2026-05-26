@@ -21,8 +21,6 @@ import com.netflix.clone.service.VideoService;
 import com.netflix.clone.util.PaginationUtils;
 import com.netflix.clone.util.ServiceUtils;
 
-import jakarta.persistence.metamodel.SetAttribute;
-
 @Service
 public class VideoServiceImpl implements VideoService {
 
