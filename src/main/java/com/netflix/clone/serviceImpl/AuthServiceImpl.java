@@ -15,7 +15,9 @@ import com.netflix.clone.dto.response.MessageResponse;
 import com.netflix.clone.entity.User;
 import com.netflix.clone.enums.Role;
 import com.netflix.clone.exception.AccountDeactivatedException;
+import com.netflix.clone.exception.BadCredentialsException;
 import com.netflix.clone.exception.EmailAlreadyExistsException;
+import com.netflix.clone.exception.EmailNotVerifiedException;
 import com.netflix.clone.exception.InvalidCredentialsException;
 import com.netflix.clone.exception.InvalidTokenException;
 import com.netflix.clone.security.JwtUtil;
@@ -68,12 +70,12 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository
                 .findByEmail(email)
                 .filter(u -> passwordEncoder.matches(password, u.getPassword()))
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
         if (!user.isActive()) {
             throw new AccountDeactivatedException("Account is inactive. Please contact support.");
         }
         if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not verified. Please verify your email before logging in.");
+            throw new EmailNotVerifiedException("Email not verified. Please verify your email before logging in.");
         }
         final String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         // System.out.println("Generated JWT Token: " + token);
@@ -89,9 +91,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public MessageResponse verifyEmail(String token) {
         User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired verification token."));
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification token."));
         if (user.getVerificationTokenExpiry().isBefore(Instant.now())) {
-            throw new RuntimeException("Verification link has expired. Please request a new one.");
+            throw new InvalidTokenException("Verification link has expired. Please request a new one.");
         }
         user.setEmailVerified(true);
         user.setVerificationToken(null);
