@@ -66,7 +66,7 @@ public class AuthController {
                 .ok(authService.resetPassword(resetPasswordRequest.getToken(), resetPasswordRequest.getNewPassword()));
     }
 
-    @PostMapping("change-password")
+    @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
@@ -78,7 +78,7 @@ public class AuthController {
     }
 
     @GetMapping("/current-user")
-    public ResponseEntity<LoginResponse> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<LoginResponse> currentUser(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(authService.currentUser(email));
     }

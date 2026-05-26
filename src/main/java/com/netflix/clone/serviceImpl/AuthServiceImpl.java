@@ -92,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
     public MessageResponse verifyEmail(String token) {
         User user = userRepository.findByVerificationToken(token)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification token."));
-        if (user.getVerificationTokenExpiry().isBefore(Instant.now())) {
+        if (user.getVerificationTokenExpiry() == null || user.getVerificationTokenExpiry().isBefore(Instant.now())) {
             throw new InvalidTokenException("Verification link has expired. Please request a new one.");
         }
         user.setEmailVerified(true);
@@ -121,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPasswordResetTokenExpiry(Instant.now().plusSeconds(1 * 60 * 60)); // 1 hour expiry
         userRepository.save(user);
         emailService.sendPasswordResetEmail(email, resetToken);
-        return new MessageResponse("Password reset email sent! Please check your email.");
+        return new MessageResponse("Password reset email sent successfully! Please check your email.");
     }
 
     @Override
