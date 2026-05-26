@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/api/auth/reset-password",
     };
 
-    @Bean
+    @SuppressWarnings("deprecation")
+@Bean
     public PasswordEncoder passwordEncoder() {
         return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
     }
