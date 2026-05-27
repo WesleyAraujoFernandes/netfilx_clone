@@ -19,7 +19,6 @@ import com.netflix.clone.service.FileUploadService;
 import com.netflix.clone.util.FileHandlerUtils;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.validation.constraints.NotNull;
 
 @Service
 public class FileUploadServiceImpl implements FileUploadService {
@@ -98,7 +97,7 @@ public class FileUploadServiceImpl implements FileUploadService {
             return buildRangeNotSatisfiableResponse(fileLength);
         }
         long contentLength = rangeEnd - rangeStart + 1;
-        Resource rangeReasource = FileHandlerUtils.createRangeResource(filePath, rangeStart, rangeEnd);
+        Resource rangeResource = FileHandlerUtils.createRangeResource(filePath, rangeStart, contentLength);
         return ResponseEntity.status(206)
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
@@ -106,7 +105,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                 .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
                 .header(HttpHeaders.CONTENT_RANGE,
                         "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength)
-                .body(rangeReasource);
+                .body(rangeResource);
     }
 
     private ResponseEntity<Resource> buildRangeNotSatisfiableResponse(long fileLength) {
